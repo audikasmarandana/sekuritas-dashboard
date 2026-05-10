@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sekuritas — Performance Monitor 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #0a0c0f;
+  --bg2: #10141a;
+  --bg3: #161c25;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8edf2;
+  --text2: #8a96a3;
+  --text3: #4a5568;
+  --green: #00d084;
+  --green-dim: rgba(0,208,132,0.12);
+  --yellow: #f5a623;
+  --yellow-dim: rgba(245,166,35,0.12);
+  --red: #ff4757;
+  --red-dim: rgba(255,71,87,0.12);
+  --blue: #4e9eff;
+  --blue-dim: rgba(78,158,255,0.10);
+  --accent: #00d084;
+  --font-head: 'Syne', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-body: 'Inter', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── GRID BG ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,208,132,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,208,132,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10,12,15,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+.logo {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.header-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+}
+.live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ── LAYOUT ── */
+main {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px 60px;
+}
+
+/* ── MONTH SELECTOR ── */
+.month-nav {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.month-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+  margin-right: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.mo-btn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+.mo-btn:hover { border-color: var(--border2); color: var(--text); }
+.mo-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0a0c0f;
+  font-weight: 500;
+}
+.mo-btn .be-tag {
+  position: absolute;
+  top: -6px; right: -4px;
+  font-size: 8px;
+  background: var(--green);
+  color: #0a0c0f;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+/* ── SECTION TITLE ── */
+.section-head {
+  font-family: var(--font-head);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── KPI SUMMARY ROW ── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.kpi-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  transition: border-color 0.2s;
+}
+.kpi-card:hover { border-color: var(--border2); }
+.kpi-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.kpi-value {
+  font-family: var(--font-head);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.kpi-sub {
+  font-size: 11px;
+  color: var(--text2);
+  font-family: var(--font-mono);
+}
+.kpi-green { color: var(--green); }
+.kpi-red   { color: var(--red); }
+.kpi-yellow{ color: var(--yellow); }
+.kpi-white { color: var(--text); }
+
+/* ── LEVER INPUT SECTION ── */
+.lever-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.lever-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+  transition: border-color 0.2s;
+}
+.lever-card:hover { border-color: var(--border2); }
+.lever-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.lever-name {
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.lever-icon {
+  width: 24px; height: 24px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+.status-pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.05em;
+}
+.s-green { background: var(--green-dim); color: var(--green); }
+.s-yellow{ background: var(--yellow-dim); color: var(--yellow); }
+.s-red   { background: var(--red-dim); color: var(--red); }
+.s-grey  { background: rgba(138,150,163,0.1); color: var(--text2); }
+
+.lever-nums {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.lever-actual {
+  font-family: var(--font-head);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.lever-target {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text2);
+}
+.lever-pct {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-left: auto;
+}
+
+/* ── PROGRESS BAR ── */
+.prog-track {
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.prog-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+/* ── SLIDER ── */
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+.slider-row label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  min-width: 44px;
+  text-transform: uppercase;
+}
+input[type=range] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  background: var(--bg3);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.3); }
+.slider-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  min-width: 40px;
+  text-align: right;
+}
+.lever-note {
+  font-size: 11px;
+  color: var(--text3);
+  margin-top: 6px;
+  font-family: var(--font-mono);
+}
+
+/* ── P&L RESULT CARD ── */
+.pl-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  flex-wrap: wrap;
+}
+.pl-main {
+  flex: 1;
+  min-width: 200px;
+  padding-right: 24px;
+  border-right: 1px solid var(--border);
+  margin-right: 24px;
+}
+.pl-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.pl-number {
+  font-family: var(--font-head);
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.pl-vs {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text2);
+}
+.pl-breakdown {
+  flex: 2;
+  min-width: 280px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 20px;
+  align-content: center;
+}
+.pb-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+}
+.pb-k { color: var(--text2); }
+.pb-v { font-family: var(--font-mono); font-weight: 500; }
+
+/* ── CHARTS ── */
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+@media (max-width: 700px) { .charts-grid { grid-template-columns: 1fr; } }
+.chart-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 18px;
+}
+.chart-title {
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.chart-wrap { position: relative; height: 180px; }
+
+/* ── KPI REF TABLE ── */
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-bottom: 24px;
+}
+.ref-table th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 8px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.ref-table th:first-child { text-align: left; }
+.ref-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  font-family: var(--font-mono);
+  color: var(--text2);
+}
+.ref-table td:first-child {
+  text-align: left;
+  color: var(--text);
+  font-family: var(--font-body);
+}
+.ref-table tr:hover td { background: rgba(255,255,255,0.02); }
+.ref-table .pl-pos { color: var(--green); }
+.ref-table .pl-neg { color: var(--red); }
+.ref-table .cur-mo td { background: rgba(0,208,132,0.04); }
+.ref-table .cur-mo td:first-child { color: var(--accent); }
+
+/* ── ALERT BANNER ── */
+.alert-bar {
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 12px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-family: var(--font-mono);
+  line-height: 1.5;
+}
+.alert-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.alert-green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,208,132,0.2); }
+.alert-yellow { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(245,166,35,0.2); }
+.alert-red { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,71,87,0.2); }
+.alert-grey { background: rgba(138,150,163,0.08); color: var(--text2); border: 1px solid var(--border); }
+
+/* ── TRIANGLE VIZ ── */
+.triangle-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.triangle-title {
+  font-family: var(--font-head);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.tier-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  transition: border-color 0.2s;
+}
+.tier-row:hover { border-color: var(--border2); }
+.tier-bar-outer {
+  width: 120px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.tier-bar-inner {
+  height: 100%;
+  border-radius: 3px;
+}
+.tier-name {
+  font-family: var(--font-head);
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1;
+}
+.tier-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text2);
+  text-align: right;
+}
+.tier-income {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 80px;
+  text-align: right;
+}
+
+/* ── FOOTER ── */
+footer {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--border);
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.footer-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text3);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  main { padding: 20px 16px 40px; }
+  .pl-main { padding-right: 0; border-right: none; margin-right: 0; border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 16px; }
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.anim { animation: fadeUp 0.4s ease forwards; }
+.anim-d1 { animation-delay: 0.05s; opacity: 0; }
+.anim-d2 { animation-delay: 0.10s; opacity: 0; }
+.anim-d3 { animation-delay: 0.15s; opacity: 0; }
+.anim-d4 { animation-delay: 0.20s; opacity: 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    Sekuritas
+    <span style="font-weight:400;color:var(--text2);font-size:13px">Performance Monitor</span>
+  </div>
+  <div class="header-right">
+    <div class="live-badge"><div class="live-dot"></div> Live Input</div>
+    <div class="header-badge" id="hdrDate">2026</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- MONTH NAV -->
+  <div class="month-nav">
+    <span class="month-label">Bulan →</span>
+    <button class="mo-btn active" onclick="setMonth(0)">Mei '26</button>
+    <button class="mo-btn" onclick="setMonth(1)">Jun '26</button>
+    <button class="mo-btn" onclick="setMonth(2)">Jul '26 <span class="be-tag">BE</span></button>
+    <button class="mo-btn" onclick="setMonth(3)">Agt '26</button>
+    <button class="mo-btn" onclick="setMonth(4)">Sep '26</button>
+    <button class="mo-btn" onclick="setMonth(5)">Okt '26</button>
+  </div>
+
+  <!-- KPI SUMMARY -->
+  <div class="section-head anim anim-d1">Ringkasan bulan ini</div>
+  <div class="kpi-grid anim anim-d2" id="kpiGrid"></div>
+
+  <!-- LEVER INPUTS -->
+  <div class="section-head anim anim-d2">Input aktual — geser ke nilai realisasi</div>
+  <div class="lever-grid anim anim-d3" id="leverGrid"></div>
+
+  <!-- P&L RESULT -->
+  <div class="section-head anim anim-d3">Estimasi P&L bulan ini</div>
+  <div class="pl-card anim anim-d4" id="plCard"></div>
+
+  <!-- ALERTS -->
+  <div class="section-head">Early warning</div>
+  <div id="alertBox" style="margin-bottom:24px"></div>
+
+  <!-- CHARTS -->
+  <div class="section-head">Tren & komposisi</div>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title">P&L proyeksi Mei–Des 2026</div>
+      <div class="chart-wrap"><canvas id="plChart" role="img" aria-label="P&L proyeksi Mei-Des 2026"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Komposisi income — steady state</div>
+      <div class="chart-wrap"><canvas id="compChart" role="img" aria-label="Komposisi income"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TRIANGLE SEGMENTATION -->
+  <div class="section-head">Triangle segmentation — kontribusi income/bulan</div>
+  <div class="triangle-wrap" id="triWrap"></div>
+
+  <!-- REFERENCE TABLE -->
+  <div class="section-head">Tabel target KPI lengkap</div>
+  <div style="overflow-x:auto;margin-bottom:24px">
+    <table class="ref-table" id="refTable"></table>
+  </div>
+
+  <!-- GUIDE -->
+  <div class="section-head">Panduan respons early warning</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:24px">
+    <div class="alert-bar alert-green"><span class="alert-icon">●</span><div><strong>Hijau — On track</strong> (&gt;90% target)<br>Tidak ada aksi khusus. Lanjutkan rencana.</div></div>
+    <div class="alert-bar alert-yellow"><span class="alert-icon">●</span><div><strong>Kuning — Perhatian</strong> (75–89%)<br>Review minggu ke-2. Identifikasi hambatan. 1 lever kuning masih aman jika yang lain hijau.</div></div>
+    <div class="alert-bar alert-red"><span class="alert-icon">●</span><div><strong>Merah — Intervensi segera</strong> (&lt;75%)<br>Eskalasi ke management. 2+ lever merah = breakeven Juli berisiko mundur.</div></div>
+    <div class="alert-bar alert-grey"><span class="alert-icon">○</span><div><strong>DMA — Monitor saja</strong><br>Tidak dapat dikontrol. Jika &lt;227M, kompensasi dengan lever margin lebih agresif.</div></div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-text">PT Sekuritas Indonesia · Performance Dashboard 2026 · Real-Case Scenario</div>
+  <div class="footer-text">Target breakeven: Juli 2026 · OPEX: Rp4.23B/bulan</div>
+</footer>
+
+<script>
+// ── DATA MODEL ──
+const OPEX = 4229.9;
+const BASE_FIXED = 3446.2; // HNWI + Retail existing + REPO + Margin existing trx komisi
+
+const MO_NAMES = ["Mei '26","Jun '26","Jul '26","Agt '26","Sep '26","Okt '26"];
+
+const TARGETS = {
+  inst:   [60,  110, 150, 180, 200, 200],
+  margin: [116, 130, 147, 165, 180, 193],
+  ht:     [2,   7,   15,  25,  35,  45],
+  dma:    [284, 284, 284, 284, 284, 284],
+  retail: [100, 200, 350, 550, 750, 1000],
+  income: [3892, 4081, 4317, 4570, 4795, 4997],
+  pl:     [-338, -149, 87, 340, 566, 767],
+};
+
+const PROJECTED_PL = [-338, -149, 87, 340, 566, 767, 810, 810];
+const PROJECTED_MO = ["Mei","Jun","Jul","Agt","Sep","Okt","Nov","Des"];
+
+// Slider state
+const state = {
+  inst: [...TARGETS.inst],
+  margin: [...TARGETS.margin],
+  ht: [...TARGETS.ht],
+  dma: [...TARGETS.dma],
+  retail: [...TARGETS.retail],
+};
+
+let curMo = 0;
+let plChart = null, compChart = null;
+
+// ── HELPERS ──
+function pct(a, t) { return t === 0 ? 100 : Math.round(a / t * 100); }
+function status(p) {
+  if (p >= 90) return 'green';
+  if (p >= 75) return 'yellow';
+  return 'red';
+}
+function statusLabel(p, dma=false) {
+  if (dma) {
+    if (p >= 90) return {cls:'s-grey', label:'Monitor'};
+    if (p >= 75) return {cls:'s-yellow', label:'Waspada'};
+    return {cls:'s-red', label:'Rendah'};
+  }
+  const s = status(p);
+  if (s==='green') return {cls:'s-green', label:'Hijau'};
+  if (s==='yellow') return {cls:'s-yellow', label:'Kuning'};
+  return {cls:'s-red', label:'Merah'};
+}
+function progColor(s) {
+  if (s==='green') return 'var(--green)';
+  if (s==='yellow') return 'var(--yellow)';
+  return 'var(--red)';
+}
+function fmt(n, dec=0) {
+  if (Math.abs(n) >= 1000) return (n/1000).toFixed(dec===0?2:dec) + 'B';
+  return Math.round(n) + 'M';
+}
+
+// ── COMPUTE P&L ──
+function computePL(mo) {
+  const inst   = state.inst[mo];
+  const margin = state.margin[mo];
+  const ht     = state.ht[mo];
+  const dma    = state.dma[mo];
+  const retail = state.retail[mo];
+
+  const instComm  = Math.round(inst * 1e9 * 0.048 / 100 / 1e6);
+  const marginInt = Math.round(margin * 1e9 * 0.095 / 12 / 1e6);
+  const htComm    = Math.round(ht * 8e9 * 0.107 / 100 / 1e6);
+  const retailAdd = parseFloat((retail * 5.03e6 * 0.157 / 100 / 1e6).toFixed(1));
+  const dmaComm   = dma;
+
+  const total = Math.round(BASE_FIXED + dmaComm + instComm + marginInt + htComm + retailAdd);
+  const pl = total - Math.round(OPEX);
+  return { total, pl, instComm, marginInt, htComm, retailAdd, dmaComm };
+}
+
+// ── RENDER KPI GRID ──
+function renderKPI(mo) {
+  const { total, pl } = computePL(mo);
+  const tgt = TARGETS.pl[mo];
+  const incTgt = TARGETS.income[mo];
+  const overallPct = pct(total, incTgt);
+  const os = status(overallPct);
+  const plColor = pl >= 0 ? 'kpi-green' : 'kpi-red';
+  const tgtColor = tgt >= 0 ? '+' : '';
+
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">P&L estimasi</div>
+      <div class="kpi-value ${plColor}">${pl >= 0 ? '+' : ''}Rp${Math.round(pl)}M</div>
+      <div class="kpi-sub">Target: ${tgtColor}${Math.round(tgt)}M</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total income</div>
+      <div class="kpi-value kpi-white">Rp${(total/1000).toFixed(2)}B</div>
+      <div class="kpi-sub">Target: ${(incTgt/1000).toFixed(2)}B</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Income vs target</div>
+      <div class="kpi-value ${os==='green'?'kpi-green':os==='yellow'?'kpi-yellow':'kpi-red'}">${overallPct}%</div>
+      <div class="kpi-sub">${os==='green'?'On track':os==='yellow'?'Perhatian':'Intervensi'}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">OPEX coverage</div>
+      <div class="kpi-value ${total>=OPEX?'kpi-green':'kpi-red'}">${(total/OPEX*100).toFixed(1)}%</div>
+      <div class="kpi-sub">OPEX Rp4.23B/mo</div>
+    </div>
+  `;
+}
+
+// ── RENDER LEVER CARDS ──
+function renderLevers(mo) {
+  const levers = [
+    {
+      key: 'inst', icon: '🏦', color: '#4e9eff',
+      name: 'Institutional team',
+      unit: 'B', unitLabel: 'trx/bulan',
+      min: 0, max: 250,
+      note: `Ramp target: ${[30,55,75,90,100,100][mo]}% dari 200B full · comm @0.048%`
+    },
+    {
+      key: 'margin', icon: '📈', color: '#00d084',
+      name: 'Margin utilized',
+      unit: 'B', unitLabel: 'total utilized',
+      min: 100, max: 193,
+      note: `Base 105B + target +${TARGETS.margin[mo]-105}B · interest ~9.5% p.a. blended`
+    },
+    {
+      key: 'ht', icon: '👥', color: '#a78bfa',
+      name: 'Heavy trader baru',
+      unit: '', unitLabel: 'akun aktif baru (kum.)',
+      min: 0, max: 50,
+      note: `@avg Rp8B/mo/akun · fee 0.107% net`
+    },
+    {
+      key: 'dma', icon: '⚡', color: '#8a96a3',
+      name: 'DMA commission',
+      unit: 'M', unitLabel: 'komisi DMA/bulan',
+      min: 180, max: 360,
+      note: `YTD avg Rp284M · range ±20%: Rp227M–Rp340M · tidak dapat dikontrol`
+    },
+    {
+      key: 'retail', icon: '🌱', color: '#f5a623',
+      name: 'Retail akun baru',
+      unit: '', unitLabel: 'akun kumulatif',
+      min: 0, max: 1000,
+      note: `@avg Rp5M trx/akun/mo · fee 0.157% net · 6-month ramp`
+    },
+  ];
+
+  document.getElementById('leverGrid').innerHTML = levers.map(l => {
+    const actual = state[l.key][mo];
+    const target = TARGETS[l.key][mo];
+    const p = l.key === 'dma' ? pct(actual, target) : pct(actual, target);
+    const sl = statusLabel(p, l.key === 'dma');
+    const fillPct = Math.min(100, p);
+    const color = l.key === 'dma' ? 'var(--text2)' : progColor(status(p));
+
+    return `<div class="lever-card">
+      <div class="lever-header">
+        <div class="lever-name">
+          <div class="lever-icon" style="background:${l.color}22">${l.icon}</div>
+          ${l.name}
+        </div>
+        <span class="status-pill ${sl.cls}">${sl.label}</span>
+      </div>
+      <div class="lever-nums">
+        <div class="lever-actual" style="color:${color}">${actual}${l.unit}</div>
+        <div class="lever-target">/ ${target}${l.unit} target</div>
+        <div class="lever-pct" style="color:${color}">${p}%</div>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" style="width:${fillPct}%;background:${color}"></div>
+      </div>
+      <div class="slider-row">
+        <label>Aktual</label>
+        <input type="range" min="${l.min}" max="${l.max}" step="${l.key==='retail'?10:1}"
+          value="${actual}"
+          oninput="setState('${l.key}', ${mo}, +this.value)">
+        <div class="slider-val">${actual}${l.unit}</div>
+      </div>
+      <div class="lever-note">${l.note}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── RENDER P&L CARD ──
+function renderPL(mo) {
+  const { total, pl, instComm, marginInt, htComm, retailAdd, dmaComm } = computePL(mo);
+  const tgt = TARGETS.pl[mo];
+  const vs = pl - tgt;
+  const plColor = pl >= 0 ? 'var(--green)' : 'var(--red)';
+  const vsColor = vs >= 0 ? 'var(--green)' : 'var(--red)';
+
+  document.getElementById('plCard').innerHTML = `
+    <div class="pl-main">
+      <div class="pl-label">Net P&L estimasi — ${MO_NAMES[mo]}</div>
+      <div class="pl-number" style="color:${plColor}">${pl >= 0 ? '+' : ''}Rp${Math.round(pl)}M</div>
+      <div class="pl-vs">vs target: <span style="color:${vsColor}">${vs>=0?'+':''}${Math.round(vs)}M</span></div>
+      <div class="pl-vs" style="margin-top:4px">Total income: Rp${(total/1000).toFixed(2)}B &nbsp;|&nbsp; OPEX: Rp4.23B</div>
+    </div>
+    <div class="pl-breakdown">
+      <div class="pb-row"><span class="pb-k">DMA komisi</span><span class="pb-v">Rp${Math.round(dmaComm)}M</span></div>
+      <div class="pb-row"><span class="pb-k">HNWI existing</span><span class="pb-v">Rp573M</span></div>
+      <div class="pb-row"><span class="pb-k">Institutional</span><span class="pb-v" style="color:var(--green)">+Rp${Math.round(instComm)}M</span></div>
+      <div class="pb-row"><span class="pb-k">Margin interest</span><span class="pb-v" style="color:var(--green)">Rp${Math.round(marginInt)}M</span></div>
+      <div class="pb-row"><span class="pb-k">HT pipeline</span><span class="pb-v" style="color:var(--green)">+Rp${Math.round(htComm)}M</span></div>
+      <div class="pb-row"><span class="pb-k">Retail komisi</span><span class="pb-v">Rp1.415B</span></div>
+      <div class="pb-row"><span class="pb-k">REPO + Reguler</span><span class="pb-v">Rp383M</span></div>
+      <div class="pb-row"><span class="pb-k">Retail baru +${Math.round(state.retail[mo])} akun</span><span class="pb-v">+Rp${retailAdd}M</span></div>
+    </div>
+  `;
+}
+
+// ── RENDER ALERTS ──
+function renderAlerts(mo) {
+  const alerts = [];
+  const levers = [
+    { key:'inst', name:'Institutional team', tgt: TARGETS.inst[mo], val: state.inst[mo] },
+    { key:'margin', name:'Margin utilized', tgt: TARGETS.margin[mo], val: state.margin[mo] },
+    { key:'ht', name:'Heavy trader baru', tgt: TARGETS.ht[mo], val: state.ht[mo] },
+    { key:'retail', name:'Retail akun baru', tgt: TARGETS.retail[mo], val: state.retail[mo] },
+  ];
+  levers.forEach(l => {
+    const p = pct(l.val, l.tgt);
+    const s = status(p);
+    if (s === 'green') {
+      alerts.push(`<div class="alert-bar alert-green"><span class="alert-icon">✓</span><div><strong>${l.name}</strong> on track — ${l.val} dari target ${l.tgt} (${p}%)</div></div>`);
+    } else if (s === 'yellow') {
+      alerts.push(`<div class="alert-bar alert-yellow"><span class="alert-icon">!</span><div><strong>${l.name}</strong> perlu perhatian — ${l.val} dari target ${l.tgt} (${p}%). Review hambatan minggu ini.</div></div>`);
+    } else {
+      alerts.push(`<div class="alert-bar alert-red"><span class="alert-icon">✕</span><div><strong>${l.name}</strong> intervensi segera — ${l.val} dari target ${l.tgt} (${p}%). Eskalasi ke management.</div></div>`);
+    }
+  });
+  const dmaP = pct(state.dma[mo], 284);
+  if (dmaP < 80) {
+    alerts.push(`<div class="alert-bar alert-yellow"><span class="alert-icon">○</span><div><strong>DMA</strong> di bawah rata-rata — Rp${state.dma[mo]}M (${dmaP}% dari baseline). Kompensasi: dorong margin scale-up lebih agresif.</div></div>`);
+  } else {
+    alerts.push(`<div class="alert-bar alert-grey"><span class="alert-icon">○</span><div><strong>DMA</strong> Rp${state.dma[mo]}M — dalam range normal. Monitor saja.</div></div>`);
+  }
+  document.getElementById('alertBox').innerHTML = alerts.join('');
+}
+
+// ── RENDER TRIANGLE ──
+function renderTriangle(mo) {
+  const { instComm, marginInt, htComm } = computePL(mo);
+  const tiers = [
+    { name:'DMA', meta:'1 akun institusional · fee 0.020%', income: state.dma[mo], color:'#4e9eff', pct: 5 },
+    { name:'Institutional', meta:`${state.inst[mo]}B trx · fee 0.048% · NEW`, income: instComm, color:'#00d084', pct: 10, new: true },
+    { name:'HNWI / Heavy trader', meta:`27 akun existing + ${state.ht[mo]} baru · fee 0.048%`, income: Math.round(573 + htComm), color:'#a78bfa', pct: 20 },
+    { name:'Margin / Leverage', meta:`Rp${state.margin[mo]}B utilized · 9.5% p.a. blended`, income: marginInt, color:'#00d084', pct: 30 },
+    { name:'Retail', meta:`${(5005+state.retail[mo]).toLocaleString()} akun · fee 0.157% net`, income: Math.round(1415+parseFloat((state.retail[mo]*5.03e6*0.157/100/1e6).toFixed(1))), color:'#f5a623', pct: 60 },
+  ];
+  const totalInc = tiers.reduce((a,t) => a+t.income, 0) + 383;
+
+  document.getElementById('triWrap').innerHTML = `
+    <div class="triangle-title">Revenue contribution per tier — ${MO_NAMES[mo]}</div>
+    ${tiers.map((t,i) => {
+      const sharePct = Math.round(t.income / totalInc * 100);
+      const barW = Math.round(t.income / Math.max(...tiers.map(x=>x.income)) * 100);
+      return `<div class="tier-row" style="border-left: 3px solid ${t.color}22">
+        <div class="tier-bar-outer" style="width:${60+i*20}px">
+          <div class="tier-bar-inner" style="width:${barW}%;background:${t.color}"></div>
+        </div>
+        <div class="tier-name" style="color:${t.color}">${t.name}${t.new?` <span style="font-size:10px;background:${t.color}22;color:${t.color};padding:1px 6px;border-radius:3px;font-weight:500">NEW</span>`:''}</div>
+        <div class="tier-meta">${t.meta}</div>
+        <div class="tier-income" style="color:${t.color}">Rp${fmt(t.income)} <span style="font-size:10px;color:var(--text3)">${sharePct}%</span></div>
+      </div>`;
+    }).join('')}
+    <div class="tier-row" style="border-left:3px solid var(--border);margin-top:4px">
+      <div style="flex:1;font-family:var(--font-mono);font-size:11px;color:var(--text2)">REPO + Reguler limit</div>
+      <div class="tier-income" style="color:var(--text2)">Rp383M <span style="font-size:10px;color:var(--text3)">${Math.round(383/totalInc*100)}%</span></div>
+    </div>
+  `;
+}
+
+// ── RENDER REF TABLE ──
+function renderRefTable() {
+  const rows = [
+    { label:'Institutional trx (B)', key:'inst', unit:'B' },
+    { label:'Margin utilized (B)',    key:'margin', unit:'B' },
+    { label:'HT akun baru (kum.)',    key:'ht', unit:'' },
+    { label:'DMA commission (M)',      key:'dma', unit:'M' },
+    { label:'Retail akun baru (kum.)','key':'retail', unit:'' },
+  ];
+  const incRow = TARGETS.income;
+  const plRow  = TARGETS.pl;
+  const yRow   = incRow.map(v => Math.round(v * 0.97));
+  const rRow   = incRow.map(v => Math.round(v * 0.93));
+
+  document.getElementById('refTable').innerHTML = `
+    <thead><tr>
+      <th style="text-align:left">KPI</th>
+      ${MO_NAMES.map((m,i) => `<th style="${i===curMo?'color:var(--accent)':''}">${m}</th>`).join('')}
+    </tr></thead>
+    <tbody>
+      ${rows.map(r => `<tr>
+        <td>${r.label}</td>
+        ${TARGETS[r.key].map((v,i) => `<td style="${i===curMo?'color:var(--accent)':''}">${v}${r.unit}</td>`).join('')}
+      </tr>`).join('')}
+      <tr style="border-top:1px solid var(--border2)">
+        <td style="color:var(--text)">Total income target</td>
+        ${incRow.map((v,i) => `<td style="${i===curMo?'color:var(--accent)':''}">${(v/1000).toFixed(2)}B</td>`).join('')}
+      </tr>
+      <tr>
+        <td style="color:var(--text)">P&L target</td>
+        ${plRow.map((v,i) => `<td class="${v>=0?'pl-pos':'pl-neg'}" style="${i===curMo?'font-weight:500':''}">${v>=0?'+':''}${v}M</td>`).join('')}
+      </tr>
+      <tr>
+        <td style="color:var(--yellow)">Kuning &lt; (income)</td>
+        ${yRow.map((v,i) => `<td style="color:var(--yellow);${i===curMo?'font-weight:500':''}">${(v/1000).toFixed(2)}B</td>`).join('')}
+      </tr>
+      <tr>
+        <td style="color:var(--red)">Merah &lt; (income)</td>
+        ${rRow.map((v,i) => `<td style="color:var(--red);${i===curMo?'font-weight:500':''}">${(v/1000).toFixed(2)}B</td>`).join('')}
+      </tr>
+    </tbody>
+  `;
+}
+
+// ── CHARTS ──
+function renderCharts() {
+  if (plChart) plChart.destroy();
+  if (compChart) compChart.destroy();
+
+  const plData = PROJECTED_PL;
+  const plColors = plData.map(v => v >= 0 ? '#00d084' : '#ff4757');
+
+  plChart = new Chart(document.getElementById('plChart'), {
+    type: 'bar',
+    data: {
+      labels: PROJECTED_MO,
+      datasets: [{
+        data: plData,
+        backgroundColor: plColors,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ' Rp'+(c.parsed.y>=0?'+':'')+Math.round(c.parsed.y)+'M' } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#4a5568', font: { size: 11, family: 'DM Mono' } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#4a5568', font: { size: 11, family: 'DM Mono' }, callback: v => 'Rp'+v+'M' }, min: -600 }
+      }
+    },
+    plugins: [{
+      afterDraw(ch) {
+        const { ctx, scales, chartArea } = ch;
+        const y0 = scales.y.getPixelForValue(0);
+        ctx.save();
+        ctx.strokeStyle = '#f5a623';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4,4]);
+        ctx.beginPath();
+        ctx.moveTo(chartArea.left, y0);
+        ctx.lineTo(chartArea.right, y0);
+        ctx.stroke();
+        ctx.fillStyle = '#f5a623';
+        ctx.font = '10px DM Mono';
+        ctx.fillText('breakeven', chartArea.left + 4, y0 - 4);
+        ctx.restore();
+      }
+    }]
+  });
+
+  const mo = curMo;
+  const { instComm, marginInt, htComm, dmaComm } = computePL(mo);
+  compChart = new Chart(document.getElementById('compChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Margin int','Retail komisi','HNWI','DMA','Institutional','HT baru','REPO+Reg'],
+      datasets: [{
+        data: [marginInt, 1415, 573, dmaComm, instComm, htComm, 383],
+        backgroundColor: ['#00d084','#4e9eff','#a78bfa','#8a96a3','#00d084','#a78bfa','#4a5568'],
+        borderColor: 'rgba(10,12,15,0.8)',
+        borderWidth: 2,
+        hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '58%',
+      plugins: {
+        legend: { position: 'right', labels: { color: '#8a96a3', font: { size: 10, family: 'DM Mono' }, boxWidth: 8, padding: 8 } },
+        tooltip: { callbacks: { label: c => ' Rp'+Math.round(c.parsed)+'M ('+Math.round(c.parsed/c.dataset.data.reduce((a,b)=>a+b,0)*100)+'%)' } }
+      }
+    }
+  });
+}
+
+// ── STATE UPDATE ──
+function setState(key, mo, val) {
+  state[key][mo] = val;
+  renderAll();
+}
+
+function setMonth(mo) {
+  curMo = mo;
+  document.querySelectorAll('.mo-btn').forEach((b,i) => b.classList.toggle('active', i === mo));
+  document.getElementById('hdrDate').textContent = MO_NAMES[mo];
+  renderAll();
+}
+
+function renderAll() {
+  renderKPI(curMo);
+  renderLevers(curMo);
+  renderPL(curMo);
+  renderAlerts(curMo);
+  renderTriangle(curMo);
+  renderRefTable();
+  renderCharts();
+}
+
+// ── INIT ──
+document.getElementById('hdrDate').textContent = MO_NAMES[0];
+renderAll();
+</script>
+</body>
+</html>
